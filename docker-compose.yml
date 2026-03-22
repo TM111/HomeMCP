@@ -7,7 +7,7 @@ services:
     volumes:
       - ollama-data:/root/.ollama
     restart: unless-stopped
-    # Per abilitare GPU NVIDIA, decommentare:
+    # To enable NVIDIA GPU, uncomment:
     # deploy:
     #   resources:
     #     reservations:

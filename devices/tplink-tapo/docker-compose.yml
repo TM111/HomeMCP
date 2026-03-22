@@ -1,0 +1,15 @@
+services:
+  tapo-mcp:
+    build:
+      context: .
+    container_name: tapo-mcp
+    working_dir: /app
+    volumes:
+      - ./server.py:/app/server.py:ro
+    env_file:
+      - .env
+    ports:
+      - "6279:6279"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

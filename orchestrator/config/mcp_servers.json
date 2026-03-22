@@ -3,6 +3,10 @@
     {
       "name": "dreame-vacuum",
       "url": "http://host.docker.internal:6278/sse"
+    },
+    {
+      "name": "tapo-p105",
+      "url": "http://host.docker.internal:6279/sse"
     }
   ]
 }

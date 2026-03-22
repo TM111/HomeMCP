@@ -1,70 +1,71 @@
 # HomeMCP - Smart Home Assistant
 
-Orchestratore modulare per la smart home: un LLM locale (Ollama) che utilizza moduli MCP per controllare dispositivi.
+Modular smart home orchestrator: a local LLM (Ollama) that uses MCP modules to control devices.
 
-## Architettura
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────┐
-│  Orchestrator (Ollama + qwen2.5:7b)         │
-│  - Chat interattiva                         │
-│  - Tool calling verso i moduli MCP          │
+│  Orchestrator (Ollama + LLM)                │
+│  - Interactive chat                         │
+│  - Tool calling to MCP modules              │
 └───────┬─────────────────────┬───────────────┘
         │                     │
    ┌────▼─────┐         ┌────▼─────┐
-   │ Dreame   │         │ Futuro   │
-   │ MCP :6278│         │ modulo   │
+   │ Dreame   │         │ Tapo     │
+   │ MCP :6278│         │ MCP :6279│
    └──────────┘         └──────────┘
 ```
 
 ## Quick Start
 
-### 1. Avvia il modulo Dreame (aspirapolvere)
+### 1. Start device modules
 
 ```bash
-cd dreame
-# Configura dreame/.env con TOKEN, ENTITY_ID, HA_URL
+# Dreame (robot vacuum)
+cd devices/dreame
+# Configure devices/dreame/.env with TOKEN, ENTITY_ID, HA_URL
+docker compose up -d
+
+# Tapo P105 (smart plug)
+cd devices/tplink-tapo
+# Configure devices/tplink-tapo/.env with TAPO_MAC, TAPO_EMAIL, TAPO_PASSWORD, TAPO_IP
 docker compose up -d
 ```
 
-### 2. Avvia l'orchestratore + Ollama
+### 2. Start the orchestrator + Ollama
 
 ```bash
-# Dalla cartella principale
-docker compose up -d          # avvia Ollama
-docker compose run orchestrator  # avvia la chat interattiva
+# From the root folder
+docker compose up -d             # start Ollama
+docker compose run orchestrator  # start interactive chat
 ```
 
-Al primo avvio, il modello `qwen2.5:7b` verrà scaricato automaticamente (~4.7 GB).
+On first run, the model will be downloaded automatically.
 
-### 3. Chatta
+### 3. Chat
 
 ```
-You: Pulisci il salotto
+You: Clean the living room
   [tool] vacuum_list_rooms({})
-  [result] {1: "Salotto", 2: "Camera", ...}
+  [result] {1: "Living Room", 2: "Bedroom", ...}
   [tool] vacuum_clean_rooms({"room_ids": [1]})
   [result] Cleaning started for rooms [1] (repeats=1)
-Assistant: Ho avviato la pulizia del salotto!
+Assistant: I started cleaning the living room!
 ```
 
-## Aggiungere un nuovo modulo
+## Adding a new module
 
-1. Crea una cartella per il modulo (es. `lights/`) con il suo `docker-compose.yml` e server MCP
-2. Esponi il server MCP su una porta (es. `:6279`)
-3. Aggiungi il server in `orchestrator/config/mcp_servers.json`:
+1. **Create a folder** `devices/my-device/` with `server.py`, `Dockerfile`, `docker-compose.yml`, and `.env`
+2. **Write the MCP server** — expose your tools via SSE transport using `mcp.server.Server` + `SseServerTransport` + Starlette/Uvicorn. See `devices/tplink-tapo/server.py` as a reference
+3. **Pick a port** — dreame uses `6278`, tapo uses `6279`. Use the next available (e.g. `6280`)
+4. **Dockerize** — use `python:3.11-slim`, install `mcp>=1.6.0`, `starlette`, `uvicorn`, and your device library. Expose your chosen port in `docker-compose.yml`
+5. **Register** — add an entry to `orchestrator/config/mcp_servers.json`:
+   ```json
+   { "name": "my-device", "url": "http://host.docker.internal:6280/sse" }
+   ```
+6. **Start** — `docker compose up -d` in your module folder, then `docker compose run orchestrator` from the root
 
-```json
-{
-  "mcp_servers": [
-    { "name": "dreame-vacuum", "url": "http://host.docker.internal:6278/sse" },
-    { "name": "lights",        "url": "http://host.docker.internal:6279/sse" }
-  ]
-}
-```
+## GPU (optional)
 
-4. Riavvia l'orchestratore: `docker compose run orchestrator`
-
-## GPU (opzionale)
-
-Per abilitare la GPU NVIDIA per Ollama, decommenta la sezione `deploy` nel `docker-compose.yml` principale.
+To enable NVIDIA GPU for Ollama, uncomment the `deploy` section in the root `docker-compose.yml`.
