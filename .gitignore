@@ -1,0 +1,33 @@
+# ── Environment ───────────────────────────────────────────
+.env
+**/.env
+
+# ── Home Assistant config ─────────────────────────────────
+dreame/config/*
+!dreame/config/.gitkeep
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# ── Docker volumes ────────────────────────────────────────
+ollama-data/
+open-webui-data/
+
+# ── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,9 @@
+# Dockerfile for dreame-python-client service
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies directly (with version pinning)
+RUN pip install --no-cache-dir requests==2.32.5 python-dotenv==1.2.2 fastmcp==3.1.1
+
+CMD ["python", "src/main.py"]

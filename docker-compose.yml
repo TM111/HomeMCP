@@ -1,0 +1,39 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: homemcp-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    # Per abilitare GPU NVIDIA, decommentare:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+    container_name: homemcp-orchestrator
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=gpt-oss:20b-cloud
+      - MCP_CONFIG=/app/config/mcp_servers.json
+    volumes:
+      - ./orchestrator/src:/app/src
+      - ./orchestrator/config:/app/config
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    stdin_open: true
+    tty: true
+    restart: "no"
+
+volumes:
+  ollama-data:

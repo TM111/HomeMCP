@@ -1,0 +1,55 @@
+services:
+  homeassistant:
+    container_name: ha_dreame
+    image: ghcr.io/home-assistant/home-assistant:stable
+    ports:
+      - "8123:8123"
+    volumes:
+      - ./config:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=Europe/Rome
+    restart: unless-stopped
+    networks:
+      - dreame-net
+
+  dreame-python-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.dreame-python-client
+    image: dreame-python-client:latest
+    container_name: dreame-python-client
+    working_dir: /app
+    volumes:
+      - ./.env:/app/.env
+      - ./src:/app/src
+    networks:
+      - dreame-net
+    depends_on:
+      - homeassistant
+    restart: "no"
+    stdin_open: true
+    tty: true
+
+  dreame-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.dreame-python-client
+    image: dreame-python-client:latest
+    container_name: dreame-mcp
+    working_dir: /app
+    volumes:
+      - ./.env:/app/.env
+      - ./src:/app/src
+    ports:
+      - "6278:6278"
+    networks:
+      - dreame-net
+    depends_on:
+      - homeassistant
+    restart: unless-stopped
+    command: python src/server.py
+
+networks:
+  dreame-net:
+    driver: bridge
