@@ -23,7 +23,7 @@ Open **http://localhost:8123** (wait ~60s after setup.sh).
 Complete the wizard, then:
 
 1. **Activate HACS**: Settings → Devices & Services → Add Integration → HACS → authorize with GitHub
-2. **Install dreame-vacuum**: HACS → Integrations → search `Dreame Vacuum` → download the latest version (use a **beta release** if your model is recent) → restart HA
+2. **Install dreame-vacuum**: HACS → Integrations → search `Dreame Vacuum` → download the latest version (⚠️use a **beta release** if your model is recent) → restart HA
 3. **Add robot**: Settings → Devices & Services → Add Integration → Dreame Vacuum → login with **DreameHome** credentials → select your robot
 
 ---

@@ -13,6 +13,7 @@ MCP module to control a TP-Link Tapo P105 smart plug through the HomeMCP orchest
 
 ## Configuration
 
+
 ### 1. Create the `.env` file
 
 Copy and fill in the `.env` file in the `tplink-tapo/` folder:
@@ -21,34 +22,29 @@ Copy and fill in the `.env` file in the `tplink-tapo/` folder:
 TAPO_MAC=CC:BA:BD:9D:00:18
 TAPO_EMAIL=your@email.com
 TAPO_PASSWORD=your_password
-
-# Direct IP (optional, skips ARP scan)
-# TAPO_IP=192.168.1.4
+# TAPO_IP=192.168.1.4  # Required on Windows/Mac, optional on Linux
 ```
 
-| Variable | Required | Description |
-|----------|:---:|-------------|
-| `TAPO_MAC` | ✅ | Plug MAC address (found in the Tapo app) |
-| `TAPO_EMAIL` | ✅ | Your TP-Link / Tapo account email |
-| `TAPO_PASSWORD` | ✅ | Your TP-Link / Tapo account password |
-| `TAPO_IP` | ❌ | Plug local IP. If not set, it is automatically resolved from MAC |
+| Variable      | Required | Description |
+|-------------- |:-------:|------------------------------------------------------|
+| `TAPO_MAC`    |   ✅    | Plug MAC address (found in the Tapo app)             |
+| `TAPO_EMAIL`  |   ✅    | Your TP-Link / Tapo account email                    |
+| `TAPO_PASSWORD`|  ✅    | Your TP-Link / Tapo account password                 |
+| `TAPO_IP`     | Win/Mac | Plug local IP. **Required on Windows/Mac**. On Linux, if not set, it is automatically resolved from MAC. |
+
+
+
+
+### ⚠️  Platform Notes
+
+- On **Linux**, the server automatically resolves the plug's IP from the MAC address if `TAPO_IP` is not set in `.env` (no extra script needed).
+- On **Windows** and **Mac**, you **must** set `TAPO_IP` in `.env` because automatic IP resolution is not supported due to Docker Desktop network limitations.
+
+
 
 ### 2. Start the container
 
-**On Linux** (recommended — direct access to local network):
-
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-The `start.sh` script:
-1. Reads `TAPO_MAC` from `.env`
-2. Runs a ping sweep on the `192.168.1.0/24` subnet
-3. Looks up the MAC in the ARP table and finds the correct IP
-4. Starts the container with the resolved IP
-
-Alternatively, if you set `TAPO_IP` in `.env`:
+Start the container normally:
 
 ```bash
 docker compose up -d
@@ -74,38 +70,3 @@ Expected output:
 ```json
 {"ok": true, "result": "State    : OFF ⛔\nName     : Soyosauce\nModel    : P105\n..."}
 ```
-
-## Architecture
-
-```
-┌──────────────────────────┐
-│  Orchestrator (LLM)      │
-│  port 6279/sse           │
-└──────────┬───────────────┘
-           │ SSE
-┌──────────▼───────────────┐
-│  tapo-mcp (this module)  │
-│  server.py :6279         │
-└──────────┬───────────────┘
-           │ LAN
-┌──────────▼───────────────┐
-│  Tapo P105 Smart Plug    │
-│  192.168.1.x             │
-└──────────────────────────┘
-```
-
-## Files
-
-| File | Description |
-|------|-------------|
-| `server.py` | MCP server with SSE transport (used by Docker) |
-| `Dockerfile` | Python 3.11 image + plugp100 + net-tools |
-| `docker-compose.yml` | Docker service definition |
-| `start.sh` | Startup script with MAC → IP resolution |
-| `.env` | Credentials (do not commit!) |
-
-## Notes
-
-- Port **6279** is already registered in the orchestrator (`orchestrator/config/mcp_servers.json`)
-- If the plug IP changes (DHCP), re-run `./start.sh`
-- To add more Tapo plugs, duplicate the module with a different port and name

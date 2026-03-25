@@ -8,13 +8,13 @@ services:
       - ollama-data:/root/.ollama
     restart: unless-stopped
     # To enable NVIDIA GPU, uncomment:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   orchestrator:
     build:
@@ -24,7 +24,8 @@ services:
       - ollama
     environment:
       - OLLAMA_HOST=http://ollama:11434
-      - OLLAMA_MODEL=gpt-oss:20b-cloud
+      - OLLAMA_MODEL=qwen3.5:0.8b
+      - OLLAMA_MAX_LOADED_MODELS=1
       - MCP_CONFIG=/app/config/mcp_servers.json
     volumes:
       - ./orchestrator/src:/app/src
