@@ -9,8 +9,6 @@ RUN apt-get update && \
 
 RUN pip install --no-cache-dir \
     plugp100>=5.1.0 \
-    mcp>=1.6.0 \
-    starlette>=0.37.0 \
-    uvicorn>=0.29.0
+    fastmcp>=2.0.0
 
 CMD ["python", "server.py"]

@@ -1,0 +1,40 @@
+# ─── Goose Configuration ─────────────────────────────────────────────────────
+# Single configuration file for Goose AI assistant.
+# Edit this file and restart the goose container to apply changes:
+#   docker compose restart goose
+
+# ─── Platform Extensions ─────────────────────────────────────────────────────
+# Built-in Goose extensions. Set to true to enable.
+platform_extensions:
+  developer: false         # Write and edit files, execute shell commands
+  code_execution: false    # Extension calls through code execution (saves tokens)
+  chatrecall: false        # Search past conversations for contextual memory
+  analyze: false           # Analyze code structure with tree-sitter
+  summon: false            # Load knowledge and delegate tasks to subagents
+  todo: false              # Todo list tracking
+
+# ─── MCP Extensions ─────────────────────────────────────────────────────────
+# External MCP servers. Add new entries to connect more devices/services.
+mcp_extensions:
+  dreame-vacuum:
+    enabled: true
+    type: streamable_http
+    name: Dreame Vacuum
+    description: Control the Dreame robot vacuum - list rooms, clean rooms, move to point
+    uri: http://localhost:6278/mcp
+
+  tapo-plug:
+    enabled: true
+    type: streamable_http
+    name: Tapo P105
+    description: Control the Tapo P105 smart plug - turn on/off, get status
+    uri: http://localhost:6279/mcp
+
+# ─── Gateway ─────────────────────────────────────────────────────────────────
+gateway:
+  type: telegram
+  max_sessions: 0          # 0 = unlimited concurrent sessions
+
+# ─── System Prompt ───────────────────────────────────────────────────────────
+# Optional custom instructions appended to Goose's system prompt.
+# system_prompt: "You are a helpful home automation assistant. Answer in Italian."

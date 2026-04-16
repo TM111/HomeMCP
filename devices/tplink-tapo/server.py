@@ -1,8 +1,8 @@
 
 """
-MCP Server for Tapo P105 - SSE transport
+MCP Server for Tapo P105 - Streamable HTTP transport
 
-Exposes Tapo P105 smart plug commands as MCP tools via SSE.
+Exposes Tapo P105 smart plug commands as MCP tools.
 
 Environment variables:
     TAPO_MAC      - Plug MAC address (e.g. XX:XX:XX:XX:XX:XX)
@@ -17,17 +17,10 @@ import re
 import logging
 import os
 
-from mcp.server import Server
-from mcp.server.sse import SseServerTransport
-from mcp import types
-from starlette.applications import Starlette
-from starlette.routing import Mount, Route
-from starlette.responses import JSONResponse
+from fastmcp import FastMCP
 
 from plugp100.common.credentials import AuthCredential
 from plugp100.new.device_factory import connect, DeviceConnectConfiguration
-
-import uvicorn
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -168,85 +161,33 @@ async def _get_status() -> str:
 
 
 # ── MCP Server ────────────────────────────────────────────────────────────────
-server = Server("tapo-p105")
+mcp = FastMCP("Tapo P105")
 
 
-@server.list_tools()
-async def list_tools() -> list[types.Tool]:
-    return [
-        types.Tool(
-            name="turn_on",
-            description="Turns on the Tapo P105 smart plug",
-            inputSchema={"type": "object", "properties": {}, "required": []},
-        ),
-        types.Tool(
-            name="turn_off",
-            description="Turns off the Tapo P105 smart plug",
-            inputSchema={"type": "object", "properties": {}, "required": []},
-        ),
-        types.Tool(
-            name="toggle",
-            description="Toggles the plug state: turns it off if on, turns it on if off",
-            inputSchema={"type": "object", "properties": {}, "required": []},
-        ),
-        types.Tool(
-            name="get_status",
-            description="Returns the current plug status (on/off, model, firmware, Wi-Fi)",
-            inputSchema={"type": "object", "properties": {}, "required": []},
-        ),
-    ]
+@mcp.tool
+async def turn_on() -> str:
+    """Turns on the Tapo P105 smart plug."""
+    return await _turn_on()
 
 
-@server.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
-    log.debug(f"call_tool: {name}")
-    try:
-        if name == "turn_on":
-            result = await _turn_on()
-        elif name == "turn_off":
-            result = await _turn_off()
-        elif name == "toggle":
-            result = await _toggle()
-        elif name == "get_status":
-            result = await _get_status()
-        else:
-            result = f"Unknown tool: {name}"
-    except Exception as e:
-        log.error(f"Error in call_tool {name}: {e}", exc_info=True)
-        result = f"Error: {e}"
-
-    return [types.TextContent(type="text", text=result)]
+@mcp.tool
+async def turn_off() -> str:
+    """Turns off the Tapo P105 smart plug."""
+    return await _turn_off()
 
 
-# ── SSE Transport ─────────────────────────────────────────────────────────────
-sse = SseServerTransport("/messages/")
+@mcp.tool
+async def toggle() -> str:
+    """Toggles the plug state: turns it off if on, turns it on if off."""
+    return await _toggle()
 
 
-async def handle_sse(request):
-    async with sse.connect_sse(
-        request.scope, request.receive, request._send
-    ) as (read_stream, write_stream):
-        await server.run(read_stream, write_stream, server.create_initialization_options())
-
-
-async def handle_test_status(request):
-    """GET /test/status — quick test for get_status (no MCP client needed)."""
-    try:
-        result = await _get_status()
-        return JSONResponse({"ok": True, "result": result})
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
-
-
-app = Starlette(
-    routes=[
-        Route("/sse", endpoint=handle_sse),
-        Mount("/messages/", app=sse.handle_post_message),
-        Route("/test/status", endpoint=handle_test_status),
-    ],
-)
+@mcp.tool
+async def get_status() -> str:
+    """Returns the current plug status (on/off, model, firmware, Wi-Fi)."""
+    return await _get_status()
 
 
 if __name__ == "__main__":
-    log.info("Tapo MCP Server started (SSE on port 6279)")
-    uvicorn.run(app, host="0.0.0.0", port=6279)
+    log.info("Tapo MCP Server started (Streamable HTTP on port 6279)")
+    mcp.run(transport="streamable-http", host="0.0.0.0", port=6279)
