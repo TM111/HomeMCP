@@ -4,37 +4,19 @@ Smart home assistant powered by a local LLM that controls devices through MCP (M
 
 ## Architecture
 
-```
-Telegram
-   │
-   ▼
-┌──────────────────────────────────┐
-│  Goose  (AI assistant)           │
-│  ├─ Telegram gateway             │
-│  └─ Ollama provider (local LLM)  │
-└──────┬──────────────┬────────────┘
-       │              │
-  ┌────▼─────┐  ┌────▼─────┐
-  │ Dreame   │  │  Tapo    │
-  │ MCP :6278│  │ MCP :6279│
-  └──────────┘  └──────────┘
-```
-
 ```mermaid
 graph TD
-  T[Telegram] --> G[Goose \n(AI assistant)]
+  T[Telegram] --> G[Goose (AI assistant)]
 
   subgraph Goose
     G1[Telegram gateway]
-    G2[Ollama provider \n(local LLM)]
+    G2[Ollama provider (local LLM)]
     G --> G1
     G --> G2
   end
 
-  G1 --> D[Dreame \nMCP :6278]
-  G2 --> D
-
-  G2 --> TAP[Tapo \nMCP :6279]
+  G1 --> D[Dreame MCP :6278]
+  G2 --> TAP[Tapo MCP :6279]
 ```
 
 **Goose** is the AI runtime that handles conversation, tool calling, and the Telegram gateway.
