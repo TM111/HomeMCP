@@ -3,21 +3,10 @@
 Smart home assistant powered by a local LLM that controls devices through MCP (Model Context Protocol) servers — all from a Telegram bot.
 
 ## Architecture
+<div align="center">
+  <img src="assets/architecture.png" alt="Descrizione immagine" width="500">
+</div>
 
-```mermaid
-graph TD
-  T[Telegram] --> G[Goose (AI assistant)]
-
-  subgraph Goose
-    G1[Telegram gateway]
-    G2[Ollama provider (local LLM)]
-    G --> G1
-    G --> G2
-  end
-
-  G1 --> D[Dreame MCP :6278]
-  G2 --> TAP[Tapo MCP :6279]
-```
 
 **Goose** is the AI runtime that handles conversation, tool calling, and the Telegram gateway.
 **Ollama** runs the LLM locally with GPU acceleration, or proxies to [cloud models](https://ollama.com/blog/cloud-models) for larger models.
